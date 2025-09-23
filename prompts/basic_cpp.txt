@@ -1,0 +1,18 @@
+Please write a testcase for the function '{func_name}' given the following program under test and function description. Your answer should only contain one test input.
+
+Program under test:
+```cpp
+{program}
+```
+
+Function description for '{func_name}':
+```txt
+{description}
+```
+
+You can directly use `assert` function for assertion. Your testcase should be formatted as:
+```cpp
+int main() {{
+    Solution solution;
+}}
+```

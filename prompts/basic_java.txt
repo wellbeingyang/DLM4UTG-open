@@ -1,0 +1,21 @@
+Please write a test method for the function '{func_name}' given the following program under test and function description. Your answer should only contain one test input.
+
+Program under test:
+```java
+{program}
+```
+
+Function description for '{func_name}':
+```txt
+{description}
+```
+
+You can directly use `assertEquals` function for assertion. Your testcase should be formatted as:
+```java
+public class SolutionTest {{
+  @Test
+  public void test_{func_name}() {{
+    
+  }}
+}}
+```

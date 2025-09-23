@@ -1,0 +1,15 @@
+tqdm
+numpy
+pandas
+pyarrow
+scipy
+matplotlib
+transformers
+torch
+tree-sitter
+tree-sitter-python
+tree-sitter-java
+tree-sitter-cpp
+sortedcontainers
+pytest-cov>=5.0.0
+fvcore

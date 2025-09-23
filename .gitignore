@@ -1,0 +1,7 @@
+__pycache__/
+outputs/
+.gradio/
+.vscode/
+.idea/
+.DS_Store
+results/*.pdf

@@ -1,0 +1,4 @@
+{"model": "diffucoder", "language": "cpp", "n": 1, "step": 8, "coverage": 0.22019714285714284, "correctness": 0.5, "accelerate": false, "avg_time": 1.3236190476190477, "avg_tflops": 47.08756532563139, "tps": 47.71190099294862}
+{"model": "diffucoder", "language": "cpp", "n": 1, "step": 16, "coverage": 0.32014285714285723, "correctness": 0.6571428571428571, "accelerate": false, "avg_time": 1.902, "avg_tflops": 94.17513065126278, "tps": 30.246357217966054}
+{"model": "diffucoder", "language": "cpp", "n": 1, "step": 32, "coverage": 0.36047523809523807, "correctness": 0.7476190476190476, "accelerate": false, "avg_time": 3.206952380952381, "avg_tflops": 188.35026130252555, "tps": 16.863659311614647}
+{"model": "diffucoder", "language": "cpp", "n": 1, "step": 64, "coverage": 0.34922809523809534, "correctness": 0.7666666666666667, "accelerate": false, "avg_time": 5.487761904761904, "avg_tflops": 376.7005226050511, "tps": 9.418359466518575}
