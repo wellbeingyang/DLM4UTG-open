@@ -94,7 +94,7 @@ def sample_tokens(logits, temperature=0.0, top_p=None, top_k=None, margin_confid
     if random:
         confidence = torch.rand_like(confidence)
 
-    return confidence, x0
+    return confidence, x0, probs
 
 
 @dataclass
@@ -425,37 +425,77 @@ class DreamGenerationMixin:
 
             mask_logits = logits[mask_index]
 
-            if alg == 'maskgit_plus':
-                confidence, x0 = sample_tokens(mask_logits, temperature=temperature, top_p=top_p, top_k=top_k)
+            if alg == 'maskgit_plus' or alg == "eb_sampler":
+                confidence, x0, probs = sample_tokens(mask_logits, temperature=temperature, top_p=top_p, top_k=top_k)
             elif alg == 'topk_margin':
-                confidence, x0 = sample_tokens(mask_logits, temperature=temperature, top_p=top_p, top_k=top_k, margin_confidence=True)
+                confidence, x0, probs = sample_tokens(mask_logits, temperature=temperature, top_p=top_p, top_k=top_k, margin_confidence=True)
             elif alg == 'entropy':
-                confidence, x0 = sample_tokens(mask_logits, temperature=temperature, top_p=top_p, top_k=top_k, neg_entropy=True)
+                confidence, x0, probs = sample_tokens(mask_logits, temperature=temperature, top_p=top_p, top_k=top_k, neg_entropy=True)
             elif alg == 'random':
-                confidence, x0 = sample_tokens(mask_logits, temperature=temperature, top_p=top_p, top_k=top_k, random=True)
+                confidence, x0, probs = sample_tokens(mask_logits, temperature=temperature, top_p=top_p, top_k=top_k, random=True)
             else:
                 raise RuntimeError(f"Unknown alg: {alg}")
 
 
             number_transfer_tokens = avg_num_transfer_tokens_per_step
-
             full_confidence = torch.full_like(x, -torch.inf, device=self.device, dtype=logits.dtype)
             full_confidence[mask_index] = confidence
-            if number_transfer_tokens > 0:
-                if alg_temp is None or alg_temp == 0:
-                    _, transfer_index = torch.topk(full_confidence, number_transfer_tokens)
-                else:
-                    full_confidence = full_confidence / alg_temp
-                    full_confidence = F.softmax(full_confidence, dim=-1).nan_to_num(1)
-                    transfer_index = torch.multinomial(full_confidence, num_samples=number_transfer_tokens)
+
+            if alg == "eb_sampler":
+                gamma = 0.1
+                batch_size, seq_len = x.size()
+
+                # 初始化一个和 x 同形状的 error
+                full_err = torch.full_like(x, torch.inf, device=self.device, dtype=logits.dtype)
+
+                full_err[mask_index] = -confidence.clone()
+
+                # 初始化 x_
                 x_ = torch.zeros_like(x, device=self.device, dtype=torch.long) + mask_token_id
                 x_[mask_index] = x0.clone()
-                row_indices = torch.arange(x.size(0), device=self.device).unsqueeze(1).expand_as(transfer_index)
-                x[row_indices, transfer_index] = torch.where(
-                    x[row_indices, transfer_index] == mask_token_id,
-                    x_[row_indices, transfer_index],
-                    x[row_indices, transfer_index]
-                )
+
+                ids = torch.argsort(full_err, dim=-1)
+                entropy = torch.full_like(x, 0.0, device=self.device, dtype=logits.dtype)
+                entropy[mask_index] = -(probs * torch.log(probs + 1e-10)).sum(dim=-1)
+                entropy = torch.gather(entropy, dim=1, index=ids)
+                acc_entropy = torch.cumsum(entropy, dim=-1)
+                cummax_entropy = torch.cummax(entropy, dim=-1).values
+                k = (acc_entropy - cummax_entropy <= gamma).sum(dim=-1)
+
+                mask_counts = (x == mask_token_id).sum(dim=-1)
+                k = torch.minimum(k, mask_counts)
+
+                # 生成一个范围矩阵 [0,1,2,...,seq_len-1]
+                range_ids = torch.arange(seq_len, device=x.device).unsqueeze(0).expand(batch_size, -1)  # (batch, seq_len)
+
+                # 对每个 batch，True 表示要 unmask 的位置
+                mask_unmask = range_ids < k.unsqueeze(1)   # (batch, seq_len)，bool
+
+                # 找到真正的下标位置 (批量)
+                ids_to_unmask = torch.where(mask_unmask, ids, torch.full_like(ids, -1))  # (batch, seq_len)
+
+                # 构造 scatter 的掩码
+                update_mask = torch.zeros_like(x, dtype=torch.bool)
+                update_mask.scatter_(1, ids_to_unmask.clamp(min=0), mask_unmask)
+
+                # 批量更新 x
+                x = torch.where(update_mask, x_, x)
+            else:
+                if number_transfer_tokens > 0:
+                    if alg_temp is None or alg_temp == 0:
+                        _, transfer_index = torch.topk(full_confidence, number_transfer_tokens)
+                    else:
+                        full_confidence = full_confidence / alg_temp
+                        full_confidence = F.softmax(full_confidence, dim=-1).nan_to_num(1)
+                        transfer_index = torch.multinomial(full_confidence, num_samples=number_transfer_tokens)
+                    x_ = torch.zeros_like(x, device=self.device, dtype=torch.long) + mask_token_id
+                    x_[mask_index] = x0.clone()
+                    row_indices = torch.arange(x.size(0), device=self.device).unsqueeze(1).expand_as(transfer_index)
+                    x[row_indices, transfer_index] = torch.where(
+                        x[row_indices, transfer_index] == mask_token_id,
+                        x_[row_indices, transfer_index],
+                        x[row_indices, transfer_index]
+                    )
 
             # this allows user-defined token control of the intermediate steps
             x[..., input_len:], all_tokens = generation_tokens_hook_func(x=x[..., input_len:], x0=x_[..., input_len:], confidence=full_confidence[..., input_len:], step=i)

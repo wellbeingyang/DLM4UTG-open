@@ -23,6 +23,7 @@ def parse_args():
     parser.add_argument('--threshold', type=float, default=0.02, help='Confidence threshold to unmask')
     parser.add_argument('--accelerate', action='store_true', help='Whether to use accelerate for generation')
     parser.add_argument('--process', type=int, default=32, help='Number of processes for evaluation')
+    parser.add_argument('--alg', type=str, default="maskgit_plus", help="maskgit_plus, eb_sampler, topk_margin, entropy")
     return parser.parse_args()
 
 args = parse_args()
@@ -57,7 +58,7 @@ def generate_multiple(model, tokenizer, prompt, system_message=''):
         {"role": "system", "content": system_message},
         {"role": "user", "content": prompt},
     ]
-    output = generate_diffucoder(model, tokenizer, messages=messages, n=args.num_tests, steps=args.steps, gen_length=args.max_length, temperature=args.temperature, alg_temp=0.2, threshold=args.threshold, accelerate=args.accelerate, end_token_id=end_token_id, pad_token_id=pad_token_id)
+    output = generate_diffucoder(model, tokenizer, messages=messages, n=args.num_tests, steps=args.steps, gen_length=args.max_length, temperature=args.temperature, alg=args.alg, alg_temp=0.2, threshold=args.threshold, accelerate=args.accelerate, end_token_id=end_token_id, pad_token_id=pad_token_id)
     outputs, tflops_per_step = output.history, output.tflops_per_step
     for output in outputs[-1][0]:
         generated_test = tokenizer.decode(output, skip_special_tokens=True)
@@ -195,8 +196,6 @@ if __name__=='__main__':
     print('output file:', output_dir / formatted_file_name)
     reformat_cov(output_dir / file_name, output_dir / formatted_file_name, language=language)
 
-
-    time.sleep(10)
     # evaluation
     predictions = read_jsonl(output_dir / formatted_file_name)
-    check_correctness(predictions, language=language, ks=[1, 2, 5])
+    check_correctness(predictions, language=language)

@@ -29,7 +29,7 @@ python testeval.py --n 5 --model_path /ckpts/Dream-v0-Instruct-7B -l python -t 1
 
 ## Results
 
-All the results of the experiments we mentioned in the paper are available in the `results` folder.
+All the meta results of the experiments we mentioned in the paper are available in the `results` folder. And some figures in our paper are also available in the `results` folder.
 
 By running `images.ipynb`, you can reproduce the figures in the paper.
 
