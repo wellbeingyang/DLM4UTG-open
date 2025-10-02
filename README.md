@@ -1,5 +1,7 @@
 # DiffTester: Accelerating Unit Test Generation for Diffusion LLMs via Repetitive Pattern
 
+[![Paper](https://img.shields.io/badge/arXiv-Paper-b31b1b.svg)](https://arxiv.org/abs/2509.24975) [![Dataset](https://img.shields.io/badge/🤗%20Dataset-TestEval--extend-yellow.svg)](https://huggingface.co/datasets/wellbeing/TestEval-extend)
+
 Official implementation of the paper:
 **DiffTester: Accelerating Unit Test Generation for Diffusion LLMs via Repetitive Pattern**
 
@@ -58,3 +60,6 @@ After environment preparation, you can run the following command to reproduce th
 
 [Dream-Instruct model](https://huggingface.co/Dream-org/Dream-v0-Instruct-7B/tree/main)
 
+## 🤗 Dataset
+
+The dataset used in our paper is in the `data` folder. You can also download it from [Huggingface](https://huggingface.co/datasets/wellbeing/TestEval-extend).
