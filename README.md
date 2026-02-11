@@ -1,7 +1,7 @@
-# DiffTester: Accelerating Unit Test Generation for Diffusion LLMs via Repetitive Pattern
+# DiffuTester: Accelerating Unit Test Generation for Diffusion LLMs via Mining Structural Pattern
 
 Official implementation of the paper:
-**DiffTester: Accelerating Unit Test Generation for Diffusion LLMs via Repetitive Pattern**
+**DiffuTester: Accelerating Unit Test Generation for Diffusion LLMs via Mining Structural Pattern**
 
 ---
 
@@ -9,9 +9,9 @@ Official implementation of the paper:
 
 Software development relies heavily on extensive unit testing, making the efficiency of automated Unit Test Generation (UTG) crucial. While diffusion large language models (dLLMs) show promise for efficient parallel test generation, they often face a trade-off between **efficiency** and **generation quality**.
 
-💡 **DiffTester** is an acceleration method designed for dLLMs in UTG.
+💡 **DiffuTester** is an acceleration method designed for dLLMs in UTG.
 
-The key idea is simple yet powerful: unit tests targeting the same focal method often share **repetitive structural patterns**. By dynamically identifying these patterns through **AST analysis** during generation, DiffTester adaptively increases the number of tokens unmasked at each step **without sacrificing quality**. An overview of DiffTester is shown below:
+The key idea is simple yet powerful: unit tests targeting the same focal method often share **structural patterns**. By dynamically identifying these patterns through **AST analysis** during generation, DiffuTester adaptively increases the number of tokens unmasked at each step **without sacrificing quality**. An overview of DiffuTester is shown below:
 
 <p align="center">
   <img src="assets/overview.png" alt="overview">
